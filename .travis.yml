@@ -6,4 +6,8 @@ addons:
     packages:
     - portaudio19-dev
 
+  before_script:
+  - "flake8 src"
+  - "flake8 tests"
   
+  script: pytest
