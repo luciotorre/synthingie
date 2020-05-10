@@ -4,9 +4,8 @@ A python based audio synth thingie
 
 # Example
 
-```
+```python
 from synthingie import Module, Player
-
 
 SAMPLERATE = 48000
 FRAMESIZE = 1024
