@@ -1,0 +1,8 @@
+numpy
+numba
+scipy
+pyaudio
+
+librosa
+pytest
+jupyterlab
