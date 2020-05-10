@@ -13,6 +13,7 @@ We need this package to install the player. Ideas on how to avoid it are welcome
 Pip install from repo until i do a release.
 
 `$ pip install git+https://github.com/luciotorre/synthingie.git`
+
 ## Example
 
 ```python
@@ -50,5 +51,5 @@ Exercises from the "Practical Synthetic Sound Design" section of the [book](http
  - Interactivity
  - Filters
  - Everything else
- 
- 
+
+

@@ -86,16 +86,22 @@ class Mul(Signal):
 register(Signal, "__mul__")(Mul)
 register(Signal, "__rmul__")(Mul)
 
-# @register("clip")
-# class ClipOp(Op):
-#     """Clip signal between extremes
 
-#     >>> run(48000, 1024, "[ 1 2 3 ] 1.5 2.5 clip")
-#     [array([1.5, 2. , 2.5])]
-#     """
-#     def __call__(self, stack):
-#         upper = stack.pop()
-#         lower = stack.pop()
-#         data = stack.pop()
+@register(Signal, "__mod__")
+class Mod(Signal):
+    """Calculate the modulus of a signal.
 
-#         stack.push(np.clip(data, lower, upper))
+    >>> two = module.value(2)
+    >>> three = module.value(3)
+    >>> result = three % two
+
+    >>> module.render_frames()
+    >>> assert np.all(result.output == 1)
+    """
+
+    def init(self, signal: Signal, other: SignalTypes):
+        self.left = signal.output
+        self.right = self.module.as_signal(other).output
+
+    def __call__(self):
+        np.mod(self.left, self.right, out=self.output)
