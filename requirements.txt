@@ -5,4 +5,5 @@ pyaudio
 
 librosa
 pytest
+flake8
 jupyterlab
