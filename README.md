@@ -4,7 +4,16 @@
 
 A python based audio synth thingie
 
-# Example
+## Install
+
+We need this package to install the player. Ideas on how to avoid it are welcome.
+
+`$ sudo apt install portaudio19-dev`
+
+Pip install from repo until i do a release.
+
+`$ pip install git+https://github.com/luciotorre/synthingie.git`
+## Example
 
 ```python
 from synthingie import Module, Player
@@ -23,19 +32,19 @@ with Player(mod) as p:
     p.play(pedestrian)
 
 ```
-# Documentation (ja!)
+## Documentation (ja!)
 
  - [A quick start guide](docs/notebooks/Quickstart.ipynb)
  - [Oscillator gallery](docs/notebooks/Oscillators.ipynb)
 
-## Designing Sound
+### Designing Sound
 
 Exercises from the "Practical Synthetic Sound Design" section of the [book](https://mitpress.mit.edu/books/designing-sound).
 
  - [24 - Pedestrians](docs/Designing_Sound/24%20-%20Pedestrians.ipynb)
 
 
-# TODO
+## TODO
  - Stereo
  - More examples
  - Interactivity
