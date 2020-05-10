@@ -24,14 +24,14 @@ with Player(mod) as p:
 ```
 # Documentation (ja!)
 
-[A quick start guide](docs/notebooks/Quickstart.ipynb)
-[Oscillator gallery](docs/notebooks/Oscillators.ipynb)
+ - [A quick start guide](docs/notebooks/Quickstart.ipynb)
+ - [Oscillator gallery](docs/notebooks/Oscillators.ipynb)
 
 ## Designing Sound
 
-Exercises from the "Practical Synthetic Sound Design" section of the [book](https://mitpress.mit.edu/books/designing-sound)
+Exercises from the "Practical Synthetic Sound Design" section of the [book](https://mitpress.mit.edu/books/designing-sound).
 
-[24 - Pedestrians](docs/Designing_Sound/24 - Pedestrians.ipynb)
+ - [24 - Pedestrians](docs/Designing_Sound/24%20-%20Pedestrians.ipynb)
 
 
 # TODO
