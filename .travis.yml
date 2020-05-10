@@ -1,1 +1,9 @@
 language: python
+
+addons:
+  apt:
+    update: true
+    packages:
+    - portaudio19-dev
+
+  
