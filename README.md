@@ -1,5 +1,8 @@
 # Synthingie
 
+.. image:: http://img.shields.io/travis/luciotorre/synthingie.svg
+   :target: https://travis-ci.org/github/luciotorre/synthingie
+   
 A python based audio synth thingie
 
 # Example
