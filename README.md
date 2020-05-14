@@ -8,7 +8,11 @@ A python based audio synth thingie
 
 We need this package to install the player. Ideas on how to avoid it are welcome.
 
+Ubuntu and friends:
 `$ sudo apt install portaudio19-dev`
+
+for mac/osx:
+`$ brew install portaudio`
 
 Pip install from repo until i do a release.
 
