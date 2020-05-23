@@ -9,9 +9,11 @@ addons:
 install:
   - pip install -r requirements_test.txt
   - pip install .
-  
+
 before_script:
   - "flake8 src"
   - "flake8 tests"
-  
-script: pytest
+
+script:
+  - pytest --pyargs synthingie
+  - pytest tests
