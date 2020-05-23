@@ -30,5 +30,6 @@ setup(
         'librosa',
         'ipython',
         'matplotlib',
+        'ipywidgets',
       ],
 )
