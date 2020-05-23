@@ -1,5 +1,5 @@
 from numba.core.decorators import njit, generated_jit
-from numba import types
+from numba import types, float64, float32, int64
 import numpy as np
 
 
@@ -15,7 +15,12 @@ def unicast(source, index):
         return lambda source, index: source[index]
 
 
-@njit(fastmath=True)
+@njit([
+    float64(float32[:], int64, float64, float64, float64, float32[:]),
+    float64(float32[:], int64, float32[:], float64, float64, float32[:]),
+    float64(float32[:], int64, float64, float32[:], float64, float32[:]),
+    float64(float32[:], int64, float32[:], float32[:], float64, float32[:]),
+], fastmath=True)
 def _generate_table(data, framerate, freq, amplitude, start_phase, data_output):
     samples = data.shape[0]
     end_phase = start_phase
@@ -42,7 +47,7 @@ class Table:
         assert is_power_of_two(data.shape[0])
         assert len(data.shape) == 1
 
-        self.data = data
+        self.data = data.astype(np.float32)
         self.samplerate = samplerate
 
     def generate(self, freq, amplitude, start_phase, output):

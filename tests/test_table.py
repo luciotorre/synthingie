@@ -3,22 +3,24 @@ from scipy.signal import find_peaks
 
 from pytest import approx
 
-from synthingie import table
+from synthingie import table, Signal
 
 sr = 8192
 
 
 def test_table():
-    source = np.linspace(0, 1, sr)
+    source = np.linspace(0, 1, sr, dtype=Signal.dtype)
     t = table.Table(source, sr)
-    output = np.ones([sr])
+    output = np.ones([sr], dtype=Signal.dtype)
 
-    t.generate(1, 1, 0, output)
+    t.generate(1., 1., 0., output)
     assert max(output) == 1.0
+    print("OUTPUT", output)
+    print("SOURCE", source)
     assert sum(output - source) == 0
 
     # double amplitude
-    t.generate(1, 2, 0, output)
+    t.generate(1., 2., 0., output)
     assert max(output) == 2.0
 
     # double amplitude, but half frequency
@@ -31,11 +33,11 @@ def test_table():
 
 
 def test_table_interpolation():
-    source = np.linspace(0, 1, 2 * sr)
+    source = np.linspace(0, 1, 2 * sr, dtype=Signal.dtype)
     t = table.Table(source, sr)
-    output = np.ones([sr])
+    output = np.ones([sr], dtype=Signal.dtype)
 
-    t.generate(1, 1, 0, output)
+    t.generate(1., 1., 0., output)
     assert max(output) == approx(1.0, 0.0001)
     assert max(output - source[::2]) == 0
 

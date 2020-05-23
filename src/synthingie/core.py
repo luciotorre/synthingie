@@ -59,7 +59,7 @@ class Audio:
             plt.plot(samples)
 
         # FIXME: audio played is mono! should be stereo if source was stereo
-        return ipd.Audio(samples, rate=self.samplerate)
+        ipd.display(ipd.Audio(samples, rate=self.samplerate))
 
     def save(self, filename):
         assert filename.lower().endswith(".wav")
@@ -79,39 +79,40 @@ class Audio:
 class Signal:
     """Base op, does nothing."""
 
-    dtype = np.float64
+    dtype = np.float32
 
-    def __init__(self, module, samplerate, framesize):
+    def bind(self, module):
         self.module = module
-        self.samplerate = samplerate
-        self.framesize = framesize
+        self.samplerate = module.samplerate
+        self.framesize = module.framesize
 
         # we pre generate our output buffer to not allocate on runtime
-        self.output = np.zeros(framesize, dtype=self.dtype)
-
-    def init(self):
-        """Called to initialize the signal with subclass specific parameters."""
+        self.output = np.zeros(self.framesize, dtype=self.dtype)
 
     def __call__(self):
         """Called to generate a new frame for this signal."""
 
 
+SignalTypes = Union[Signal, float, int]
+
+
+def signal_value(signal_or_value: SignalTypes):
+    if isinstance(signal_or_value, Signal):
+        return signal_or_value.output
+    else:
+        return signal_or_value  # is value
+
+
 class Module:
     def __init__(self, samplerate: int, framesize: int):
+        assert isinstance(samplerate, int), "int required"
+        assert isinstance(framesize, int), "int required"
         self.module = self
         self.samplerate = samplerate
         self.framesize = framesize
         self._steps = []
 
-    def as_signal(self, value):
-        if isinstance(value, (int, float)):
-            return self.value(value)
-        elif isinstance(value, Signal):
-            return value
-        else:
-            raise ValueError("Can't make a signal out of: %s" % (value, ))
-
-    def render_frames(self):
+    def render_frame(self):
         for step in self._steps:
             step()
 
@@ -123,7 +124,7 @@ class Module:
         output = np.zeros(num_frames * self.framesize)
         for i in range(num_frames):
             start = time.time()
-            self.render_frames()
+            self.render_frame()
             times.append(time.time() - start)
             output[i * self.framesize:(i + 1) * self.framesize] = target.output
 
@@ -142,8 +143,12 @@ class Module:
             ))
         return Audio(self.samplerate, output[:int(duration_s * self.samplerate)])
 
+    def add_step(self, signal):
+        signal.bind(self)
+        self._steps.append(signal)
 
-def register(base_class, method_name):
+
+def register(base_class, method_name, overwrite=False):
     accepted = [Signal, Module]
     if base_class not in accepted:
         raise ValueError("Invalid base class: %s, expecting one of %s" % (
@@ -151,19 +156,17 @@ def register(base_class, method_name):
                 accepted
             ))
 
-    if hasattr(base_class, method_name):
+    if not overwrite and hasattr(base_class, method_name):
         raise NameError("Class %s: name '%s' already in use" % (base_class, method_name))
 
     def decorator(method_class):
         @wraps(method_class)
         def wrapper(self, *args, **kwargs):
-            operation = method_class(self.module, self.samplerate, self.framesize)
             if isinstance(self, Signal):
-                operation.init(self, *args, **kwargs)
+                operation = method_class(self, *args, **kwargs)
             else:
-                operation.init(*args, **kwargs)
-
-            self.module._steps.append(operation)
+                operation = method_class(*args, **kwargs)
+            self.module.add_step(operation)
             return operation
         setattr(base_class, method_name, wrapper)
         return method_class
@@ -172,7 +175,7 @@ def register(base_class, method_name):
 
 @register(Module, "value")
 class Value(Signal):
-    def init(self, value: float):
+    def __init__(self, value: float):
         self.set(value)
 
     def set(self, value):
@@ -181,10 +184,7 @@ class Value(Signal):
             raise ValueError("Value '%s' not in accepted types: %s" % (
                 value, accepted
             ))
-        self.output = value
+        self._value = float(value)
 
     def __call__(self):
-        pass
-
-
-SignalTypes = Union[Signal, float, int]
+        self.output.fill(self._value)

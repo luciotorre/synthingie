@@ -14,6 +14,10 @@ Pip install from repo until i do a release.
 
 `$ pip install git+https://github.com/luciotorre/synthingie.git`
 
+If you want widgets to work you need nodejs+npm installed:
+
+`$ sudo apt install npm nodejs`
+
 ## Example
 
 ```python
@@ -49,7 +53,13 @@ Exercises from the "Practical Synthetic Sound Design" section of the [book](http
  - Stereo
  - More examples
  - Interactivity
+ - Visualizers (vumeters, etc)
+ - Graphical representation of patches
+ - Multi output nodes?
+ - Buses
+ - Jack compatibility
  - Filters
+ - Sequencing
  - Everything else
 
 
