@@ -127,3 +127,52 @@ class GT(Operation):
 
     def __call__(self):
         np.greater(self.left, self.right, out=self.output)
+
+
+@register(Signal, "__abs__")
+class Abs(Signal):
+    """Subtract a signal from a value.
+
+    >>> one = module.value(-1)
+    >>> result = abs(one)
+
+    >>> module.render_frame()
+    >>> assert np.all(result.output == 1.0)
+    """
+
+    def __init__(self, signal: Signal):
+        self.signal = signal_value(signal)
+
+    def __call__(self):
+        np.abs(self.signal, out=self.output)
+
+
+@register(Signal, "__pow__")
+class Pow(Operation):
+    """Calculate the modulus of a signal.
+
+    >>> two = module.value(2)
+    >>> three = module.value(3)
+    >>> result = three ** two
+
+    >>> module.render_frame()
+    >>> assert np.all(result.output == 3 ** 2)
+    """
+
+    def __call__(self):
+        np.power(self.left, self.right, out=self.output)
+
+
+@register(Signal, "__rpow__")
+class RPow(Operation):
+    """Calculate the modulus of a signal.
+
+    >>> two = module.value(2)
+    >>> result = 2 ** two
+
+    >>> module.render_frame()
+    >>> assert np.all(result.output == 2 ** 2)
+    """
+
+    def __call__(self):
+        np.power(self.right, self.left, out=self.output)

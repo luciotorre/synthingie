@@ -16,6 +16,7 @@ import librosa.display
 
 from scipy.io.wavfile import write, read
 
+from .score import Score
 
 ms.use('seaborn-muted')
 
@@ -24,6 +25,12 @@ class Audio:
     def __init__(self, samplerate, samples):
         self.samplerate = samplerate
         self.samples = samples
+
+    def __getitem__(self, args):
+        if isinstance(args, slice):
+            return self.__class__(self.samplerate, self.samples[args])
+        else:
+            return self.samples[args]
 
     def display(self, limit_samples=None):
         # to make things compatible, transpose into librosa format and make mono
@@ -53,13 +60,18 @@ class Audio:
         plt.tight_layout()
         plt.figure(figsize=(12, 4))
 
+        self.display_signal(limit_samples)
+
+        # FIXME: audio played is mono! should be stereo if source was stereo
+        ipd.display(ipd.Audio(samples, rate=self.samplerate))
+
+    def display_signal(self, limit_samples=None):
+        samples = librosa.to_mono(self.samples.T)
+
         if limit_samples is not None:
             plt.plot(samples[:limit_samples])
         else:
             plt.plot(samples)
-
-        # FIXME: audio played is mono! should be stereo if source was stereo
-        ipd.display(ipd.Audio(samples, rate=self.samplerate))
 
     def save(self, filename):
         assert filename.lower().endswith(".wav")
@@ -112,18 +124,100 @@ class Module:
         self.framesize = framesize
         self._steps = []
 
+    def profile(self, duration_s, score=None):
+        # How many frames do we need?
+        num_frames = int(duration_s * self.samplerate / self.framesize) + 1
+        output = np.zeros(num_frames * self.framesize)
+
+        frame_times = []
+        step_times = [[] for s in self._steps]
+        event_times = []
+
+        # Setup score
+        frame_duration_s = self.framesize / self.samplerate
+        score_runner = None
+        if score is not None:
+            score_runner = score.run()
+
+        for i in range(num_frames):
+            start = time.time()
+            if score_runner is not None:
+                start_time = time.perf_counter_ns()
+                score_runner.advance(frame_duration_s)
+                event_times.append(time.perf_counter_ns() - start_time)
+
+            for j, step in enumerate(self._steps):
+                start_time = time.perf_counter_ns()
+                step()
+                step_times[j].append(time.perf_counter_ns() - start_time)
+
+            frame_times.append(time.time() - start)
+            output[i * self.framesize:(i + 1) * self.framesize] = step.output
+
+        frame_duration = self.framesize / self.samplerate
+        print("{} runs of {:.2f}ms framesize each.".format(
+            len(frame_times), 1000 * frame_duration
+        ))
+        print("Processing duration {:.2f}ms avg, {:.2f}ms median, {:.2f}ms max, {:.2f}ms min.".format(
+            sum(frame_times) / len(frame_times) * 1000,
+            np.median(frame_times) * 1000,
+            max(frame_times) * 1000,
+            min(frame_times) * 1000
+        ))
+        print("Processing duration {:.2f}% avg, {:.2f}% median, {:.2f}% max, {:.2f}% min of sample duration.".format(
+            sum(frame_times) / len(frame_times) / frame_duration * 100,
+            np.median(frame_times) / frame_duration * 100,
+            max(frame_times) / frame_duration * 100,
+            min(frame_times) / frame_duration * 100
+        ))
+
+        def print_header():
+            print_footer()
+            print("| {:20s} | {:11s} | {:11s} | {:11s} | {:11s} |".format(
+                "", "avg", "median", "max", "min"
+            ))
+            print_footer()
+
+        def print_footer():
+            print("+" + "-" * 22 + "+-------------" * 4 + "+")
+
+        def print_stats(label, times):
+            print("| {:20s} | {:9.2f}µs | {:9.2f}µs | {:9.2f}µs | {:9.2f}µs |".format(
+                label,
+                sum(times) / len(times) / 1000,
+                np.median(times) / 1000,
+                max(times) / 1000,
+                min(times) / 1000
+            ))
+        print()
+        print_header()
+        for step, times in zip(self._steps, step_times):
+            print_stats(str(step.__class__.__name__), times)
+        print_footer()
+
     def render_frame(self):
         for step in self._steps:
             step()
 
-    def render(self, target: Signal, duration_s: float, profile: bool = False) -> Audio:
+    def render(
+            self, target: Signal, duration_s: float,
+            score: Score = None, profile: bool = False) -> Audio:
         times = []
 
         # How many frames do we need?
         num_frames = int(duration_s * self.samplerate / self.framesize) + 1
         output = np.zeros(num_frames * self.framesize)
+
+        # Setup score
+        frame_duration_s = self.framesize / self.samplerate
+        score_runner = None
+        if score is not None:
+            score_runner = score.run()
+
         for i in range(num_frames):
             start = time.time()
+            if score_runner is not None:
+                score_runner.advance(frame_duration_s)
             self.render_frame()
             times.append(time.time() - start)
             output[i * self.framesize:(i + 1) * self.framesize] = target.output

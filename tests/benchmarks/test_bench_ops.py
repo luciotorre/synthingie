@@ -27,3 +27,15 @@ def test_gt(module, benchmark):
     one = module.sin(440)
     gt = one > one
     benchmark(gt)
+
+
+def test_abs(module, benchmark):
+    one = module.sin(440)
+    abs_one = abs(one)
+    benchmark(abs_one)
+
+
+def test_pow(module, benchmark):
+    one = module.sin(440)
+    pw = one ** one
+    benchmark(pw)
