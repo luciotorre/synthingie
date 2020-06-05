@@ -17,3 +17,4 @@ before_script:
 script:
   - pytest --pyargs synthingie
   - pytest tests
+  - pytest docs
