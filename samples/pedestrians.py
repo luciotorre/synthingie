@@ -1,14 +1,13 @@
-import synthingie.oscillators as osc
-from synthingie.player import play
+import synthingie as st
 
 
 def pedestrian():
-    wave = osc.Sin(2500, 0.2)
-    gate = osc.NaiveSquare(5, amplitude=0.5) + 0.5
+    wave = st.Sin(2500, 0.2)
+    gate = st.NaiveSquare(5, amplitude=0.5) + 0.5
 
     pedestrian = wave * gate
 
-    play(pedestrian)
+    st.play(pedestrian)
 
 
 if __name__ == "__main__":

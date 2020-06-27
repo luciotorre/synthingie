@@ -27,15 +27,14 @@ If you want the full interactive experience you need to install some bokeh stuff
 ## Example
 
 ```python
-from synthingie import oscillators, player
+import synthingie as st
 
+wave = st.Sin(2500, 0.2)
+gate = st.NaiveSquare(5, amplitude=0.5) + 0.5
 
-osc = oscillators.Sin(2500, 0.2)
-gate = oscillators.NaiveSquare(5, amplitude=0.5) + 0.5
+pedestrian = wave * gate
 
-pedestrian = osc * gate
-
-player.play(pedestrian)
+st.play(pedestrian)
 
 ```
 
