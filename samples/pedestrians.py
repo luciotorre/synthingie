@@ -1,20 +1,15 @@
-from synthingie import Module, Player
+import synthingie.oscillators as osc
+from synthingie.player import play
 
 
-def play():
-    SAMPLERATE = 48000
-    FRAMESIZE = 1024
+def pedestrian():
+    wave = osc.Sin(2500, 0.2)
+    gate = osc.NaiveSquare(5, amplitude=0.5) + 0.5
 
-    mod = Module(SAMPLERATE, FRAMESIZE)
+    pedestrian = wave * gate
 
-    osc = mod.sin(2500, 0.2)
-    gate = mod.naive_square(5, amplitude=0.5) + 0.5
-
-    pedestrian = osc * gate
-
-    with Player(mod) as p:
-        p.play(pedestrian)
+    play(pedestrian)
 
 
 if __name__ == "__main__":
-    play()
+    pedestrian()

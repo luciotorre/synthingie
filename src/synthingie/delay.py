@@ -1,48 +1,68 @@
+__all__ = ['FixedDelay']
+
 import numpy as np
 
-from .core import Signal, register, signal_value
+from .core import Signal, signal
+from .misc import Ramp  # NOQA
 
 
-@register(Signal, "fixed_delay")
+class CircularBuffer:
+    def __init__(self, buffer_size):
+        self.buffer_size = buffer_size
+        self.buffer = np.zeros([self.buffer_size])
+        self.buffer_p = 0
+
+    def add(self, samples):
+        bz = self.buffer_size
+        fz = samples.shape[0]
+        self.buffer_p = (self.buffer_p + fz) % bz
+        p = self.buffer_p
+
+        idx = min(p, fz)
+        self.buffer[p - idx:p] = samples[fz-idx:]
+        self.buffer[bz - fz + idx:] = samples[:fz-idx]
+
+    def head(self, out):
+        p = self.buffer_p
+        fz = out.shape[0]
+        bz = self.buffer_size
+
+        idx = min(bz - p, fz)
+        out[:idx] = self.buffer[p:min(bz, p + fz)]
+        out[idx:] = self.buffer[0:fz - idx]
+
+    def index(self, array):
+        return self.buffer[(array + self.buffer_p) % self.buffer_size]
+
+
+@signal("fixed_delay")
 class FixedDelay(Signal):
     """Delay a signal by a fixed amount of time.
 
-    >>> mod = Module(10, 10)
-    >>> one = mod.ramp(0, 1)
+    >>> one = Ramp(1)
     >>> delayed = one.fixed_delay(0.5)
+    >>> delayed.configure(10, 10)
     >>> more_delayed = one.fixed_delay(1.5)
-    >>> mod.render_frame()
+    >>> more_delayed.configure(10, 10)
+    >>> one(); delayed(); more_delayed()
     >>> one.output
     array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ], dtype=float32)
     >>> delayed.output
     array([0. , 0. , 0. , 0. , 0. , 0.1, 0.2, 0.3, 0.4, 0.5], dtype=float32)
     >>> more_delayed.output
     array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)
-    >>> mod.render_frame()
+    >>> one(); delayed(); more_delayed()
     >>> more_delayed.output
     array([0. , 0. , 0. , 0. , 0. , 0.1, 0.2, 0.3, 0.4, 0.5], dtype=float32)
     """
-    def __init__(self, signal: Signal, delay_s: float):
-        self.signal = signal_value(signal)
-        self.delay_s = delay_s
-        self.offset = 0
 
-    def bind(self, module):
-        super().bind(module)
+    signal: Signal
+    delay_s: float
+
+    def setup(self):
         self.buffer_size = int(self.delay_s * self.samplerate) + self.framesize
-        self.buffer = np.zeros([self.buffer_size])
-        self.buffer_p = 0
+        self.buffer = CircularBuffer(self.buffer_size)
 
     def __call__(self):
-        self.buffer_p = (self.buffer_p + self.framesize) % self.buffer_size
-        p = self.buffer_p
-        bz = self.buffer_size
-        fz = self.framesize
-
-        idx = min(p, fz)
-        self.buffer[p - idx:p] = self.signal[fz-idx:]
-        self.buffer[bz - fz + idx:] = self.signal[:fz-idx]
-
-        idx = min(bz - p, fz)
-        self.output[:idx] = self.buffer[p:min(bz, p + fz)]
-        self.output[idx:] = self.buffer[0:fz - idx]
+        self.buffer.add(self.signal.output)
+        self.buffer.head(self.output)

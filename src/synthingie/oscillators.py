@@ -1,8 +1,10 @@
+from dataclasses import field
+
 from numba.core.decorators import njit
 from numba import float32, float64, int64
 import numpy as np
 
-from .core import Signal, Module, register, SignalTypes, signal_value
+from .core import Signal, signal
 from .oscillator_data import analog_saw, analog_triangle
 from .table import Table, unicast
 
@@ -79,7 +81,17 @@ def _generate_polyblep_square(framerate, freq, duty, amplitude, start_phase, dat
     return end_phase
 
 
-@njit(fastmath=True)
+@njit([
+    float64(int64, float64, float64, float64, float64, float32[:]),
+    float64(int64, float32[:], float64, float64, float64, float32[:]),
+    float64(int64, float64, float32[:], float64, float64, float32[:]),
+    float64(int64, float32[:], float32[:], float64, float64, float32[:]),
+    float64(int64, float64, float64, float32[:], float64, float32[:]),
+    float64(int64, float32[:], float64, float32[:], float64, float32[:]),
+    float64(int64, float64, float32[:], float32[:], float64, float32[:]),
+    float64(int64, float32[:], float32[:], float32[:], float64, float32[:]),
+
+    ], fastmath=True)
 def _generate_naive_square(framerate, freq, duty, amplitude, start_phase, data_output):
     end_phase = start_phase
 
@@ -95,83 +107,77 @@ def _generate_naive_square(framerate, freq, duty, amplitude, start_phase, data_o
     return end_phase
 
 
-@register(Module, "saw")
-class PolyBlepSaw(Signal):
+@signal
+class Saw(Signal):
     """Generate a saw wave at the specified frequency and amplitude.
 
-    >>> wave = module.saw(440, 2)
-    >>> module.render_frame()
+    >>> wave = Saw(440, 2)
+    >>> wave.render_frame()
     """
-    def __init__(self, frequency: SignalTypes, amplitude: SignalTypes = 1.0):
-        # Store the arguments
-        self.frequency = signal_value(frequency)
-        self.amplitude = signal_value(amplitude)
+
+    frequency: Signal
+    amplitude: Signal = field(default=1)
+
+    def setup(self):
         # we need to track phase, so consecutive samples end and start in the same places + 1
         self.phase = 0.0
 
     def __call__(self):
         self.phase = _generate_polyblep_saw(
-            self.samplerate, self.frequency, self.amplitude, self.phase, self.output)
+            self.samplerate, self.frequency.output, self.amplitude.output, self.phase, self.output)
 
 
-@register(Module, "naive_square")
+@signal
 class NaiveSquare(Signal):
     """Generate a naive square wave at the specified frequency and amplitude.
 
-    >>> wave = module.naive_square(440, 2)
-    >>> module.render_frame()
+    >>> wave = NaiveSquare(440, 2)
+    >>> wave.render_frame()
     """
-    def __init__(self, frequency: SignalTypes, duty: SignalTypes = 0.5, amplitude: SignalTypes = 1.0):
-        # Store the arguments
-        self.frequency = signal_value(frequency)
-        self.amplitude = signal_value(amplitude)
-        self.duty = signal_value(duty)
-        # we need to track phase, so consecutive samples end and start in the same places + 1
-        self.phase = 0.0
+    frequency: Signal
+    amplitude: Signal = field(default=1)
+    duty: Signal = field(default=0.5)
+    phase: float = field(default=0)
 
     def __call__(self):
         self.phase = _generate_naive_square(
-            self.samplerate, self.frequency, self.duty, self.amplitude, self.phase, self.output)
+            self.samplerate, self.frequency.output, self.duty.output, self.amplitude.output, self.phase, self.output)
 
 
-@register(Module, "square")
-class PolyBlepSquare(NaiveSquare):
+@signal
+class Square(NaiveSquare):
     """Generate a square wave at the specified frequency and amplitude.
 
-    >>> wave = module.square(440, 2)
-    >>> module.render_frame()
+    >>> wave = Square(440, 2)
+    >>> wave.render_frame()
     """
 
     def __call__(self):
         self.phase = _generate_polyblep_square(
-            self.samplerate, self.frequency, self.duty, self.amplitude, self.phase, self.output)
+            self.samplerate, self.frequency.output, self.duty.output, self.amplitude.output, self.phase, self.output)
 
 
+@signal
 class TableSignal(Signal):
     TABLE_SIZE = 8192
 
-    def __init__(self, frequency: SignalTypes, amplitude: SignalTypes = 1.0):
-        # Store the arguments
-        self.frequency = signal_value(frequency)
-        self.amplitude = signal_value(amplitude)
-        # we need to track phase, so consecutive samples end and start in the same places + 1
-        self.phase = 0.0
+    frequency: Signal
+    amplitude: Signal = field(default=1)
+    phase: float = field(default=0)
 
-    def bind(self, module):
-        super().bind(module)
-        # create table, fill it with something
+    def setup(self):
         self.generator = self.build_table()
 
     def __call__(self):
-        self.phase = self.generator.generate(self.frequency, self.amplitude, self.phase, self.output)
+        self.phase = self.generator.generate(self.frequency.output, self.amplitude.output, self.phase, self.output)
 
 
-@register(Module, "sin")
+@signal
 class Sin(TableSignal):
     """Generate a sin wave at the specified frequency and amplitude.
 
-    >>> sin = module.sin(440, 2)
-    >>> module.render_frame()
+    >>> sin = Sin(440, 2)
+    >>> sin.render_frame()
     """
     def build_table(self):
         return Table(
@@ -180,12 +186,12 @@ class Sin(TableSignal):
         )
 
 
-@register(Module, "naive_saw")
+@signal
 class NaiveSaw(TableSignal):
     """Generate a naive saw wave at the specified frequency and amplitude.
 
-    >>> naive_saw = module.naive_saw(440, 2)
-    >>> module.render_frame()
+    >>> naive_saw = NaiveSaw(440, 2)
+    >>> naive_saw.render_frame()
     """
 
     def build_table(self):
@@ -194,12 +200,12 @@ class NaiveSaw(TableSignal):
             self.samplerate)
 
 
-@register(Module, "naive_triangle")
+@signal
 class NaiveTriangle(TableSignal):
     """Generate a naive triangle wave at the specified frequency and amplitude.
 
-    >>> wave = module.naive_triangle(440, 2)
-    >>> module.render_frame()
+    >>> wave = NaiveTriangle(440, 2)
+    >>> wave.render_frame()
     """
     def build_table(self):
         return Table(
@@ -210,15 +216,18 @@ class NaiveTriangle(TableSignal):
             ]), self.samplerate)
 
 
-@register(Module, "analog_sin")
+Triangle = NaiveTriangle
+
+
+@signal
 class AnalogSin(TableSignal):
     """Generate a analog-like sin wave at the specified frequency and amplitude.
 
     Analog sin is the "quadratic aproximation of sine with slightly richer harmonics"
     https://github.com/VCVRack/Fundamental/blob/v0.6/src/VCO.cpp
 
-    >>> sin = module.analog_sin(440, 2)
-    >>> module.render_frame()
+    >>> sin = AnalogSin(440, 2)
+    >>> sin.render_frame()
     """
     def build_table(self):
         def analog_sin(phase):
@@ -234,26 +243,33 @@ class AnalogSin(TableSignal):
         )
 
 
-@register(Module, "analog_saw")
+@signal
 class AnalogSaw(TableSignal):
     """Generate a analog-like saw wave at the specified frequency and amplitude.
 
-    >>> wave = module.analog_saw(440, 2)
-    >>> module.render_frame()
+    >>> wave = AnalogSaw(440, 2)
+    >>> wave.render_frame()
     """
     def build_table(self):
         return Table(analog_saw, self.samplerate)
 
 
+@signal
 class AnalogTriangle(TableSignal):
     """Generate a analog-like triangle wave at the specified frequency and amplitude.
 
-    >>> wave = module.triangle(440, 2)
-    >>> module.render_frame()
+    >>> wave = AnalogTriangle(440, 2)
+    >>> wave.render_frame()
     """
     def build_table(self):
         return Table(analog_triangle, self.samplerate)
 
 
-register(Module, "analog_triangle")(AnalogTriangle)
-register(Module, "triangle")(AnalogTriangle)
+@signal
+class WhiteNoise(Signal):
+    """
+    >>> noise = WhiteNoise()
+    >>> noise.render_frame()
+    """
+    def __call__(self):
+        self.output[:] = np.random.rand(self.output.shape[0]) - 0.5

@@ -24,12 +24,13 @@ setup(
     package_dir={'': 'src'},
     install_requires=[
         'numpy',
-        'numba',
+        'numba==0.49.1',
         'scipy',
         'pyaudio',
         'librosa',
         'ipython',
         'matplotlib',
         'ipywidgets',
+        'bokeh',
       ],
 )

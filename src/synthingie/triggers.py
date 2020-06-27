@@ -1,5 +1,5 @@
 from numba import njit
-from .core import Module, Signal, register
+from .core import Signal, signal
 from .table import unicast
 
 
@@ -19,19 +19,21 @@ def _generate_triggers(framerate, duration, start, data_output):
     return end
 
 
-@register(Module, "metro")
-class MetroSignal(Signal):
+@signal
+class Metro(Signal):
     """Generate a trigger every number of seconds.
 
-    >>> mod = Module(10, 10)
-    >>> metro = mod.metro(0.5)
-    >>> mod.render_frame()
+
+    >>> metro = Metro(0.5)
+    >>> metro.configure(10, 10)
+    >>> metro.render_frame()
     >>> metro.output
     array([1., 0., 0., 0., 0., 1., 0., 0., 0., 0.], dtype=float32)
     """
-    def __init__(self, rate):
+    rate: float
+
+    def setup(self):
         self.end = 0
-        self.rate = rate
 
     def __call__(self):
         self.end = _generate_triggers(self.samplerate, self.rate, self.end, self.output)

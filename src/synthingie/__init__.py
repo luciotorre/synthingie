@@ -1,9 +1,12 @@
-from .core import Module, Signal, Audio, register  # NOQA
-from .cabinet import Cabinet  # NOQA
-from .player import Player  # NOQA
+from .core import *  # NOQA
+from .delay import *  # NOQA
+from .misc import *  # NOQA
+from .oscillators import *  # NOQA
+from .triggers import *  # NOQA
 
-from . import delay  # NOQA
-from . import misc  # NOQA
-from . import operations  # NOQA
-from . import oscillators  # NOQA
-from . import triggers  # NOQA
+from .score import *  # NOQA
+
+import synthingie.operations  # NOQA
+import synthingie.filters  # NOQA
+import synthingie.live  # NOQA
+

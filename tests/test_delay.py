@@ -1,10 +1,14 @@
 import pytest
 
+from synthingie import misc
 
-def test_fixed_delay(module):
-    ramp = module.ramp(0, 1)
+
+def test_fixed_delay():
+    ramp = misc.Ramp(0, 1)
     delayed = ramp.fixed_delay(1)
 
-    for i in range(int(2 * module.samplerate / module.framesize)):
-        module.render_frame()
+    delayed.configure()
+
+    for i in range(int(2 * delayed.samplerate / delayed.framesize)):
+        delayed.render_frame()
         assert pytest.approx(delayed.output[0], max(0, ramp.output[0] - 1))

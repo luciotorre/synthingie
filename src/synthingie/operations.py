@@ -1,178 +1,172 @@
 import numpy as np
 
-from .core import Signal, SignalTypes, register, signal_value
+from .core import Signal, signal
 
 
+@signal
 class Operation(Signal):
-    def __init__(self, signal: Signal, other: SignalTypes):
-        self.left = signal.output
-        self.right = signal_value(other)
+    left: Signal
+    right: Signal
 
 
 class Plus(Operation):
     """Add a signal and a signal or value.
 
-    >>> one = module.value(1)
-    >>> two = module.value(2)
+    >>> one = Value(1)
+    >>> two = Value(2)
     >>> result = 3 + one + two + 3
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 9.0)
     """
 
     def __call__(self):
-        np.add(self.left, self.right, out=self.output)
+        np.add(self.left.output, self.right.output, out=self.output)
 
 
-register(Signal, "__add__")(Plus)
-register(Signal, "__radd__")(Plus)
+signal("__add__")(Plus)
+signal("__radd__")(Plus)
 
 
-@register(Signal, "__sub__")
+@signal("__sub__")
 class Minus(Operation):
     """Subtract a signal or value from a signal.
 
-    >>> one = module.value(1)
+    >>> one = Value(1)
     >>> result = one - one - 1
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == -1.0)
     """
 
     def __call__(self):
-        np.subtract(self.left, self.right, out=self.output)
+        np.subtract(self.left.output, self.right.output, out=self.output)
 
 
-@register(Signal, "__rsub__")
+@signal("__rsub__")
 class RMinus(Operation):
     """Subtract a signal from a value.
 
-    >>> one = module.value(1)
+    >>> one = Value(1)
     >>> result = 2 - one
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 1.0)
     """
 
     def __call__(self):
-        np.subtract(self.right, self.left, out=self.output)
+        np.subtract(self.right.output, self.left.output, out=self.output)
 
 
 class Mul(Operation):
     """Multiply a signal and a signal or value.
 
-    >>> two = module.value(2)
-    >>> three = module.value(3)
+    >>> two = Value(2)
+    >>> three = Value(3)
     >>> result = 1 * two * three * 4
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 24.0)
     """
 
-    def init(self, signal: Signal, other: SignalTypes):
-
-        self.left = signal.output
-        self.right = self.module.as_signal(other).output
-
     def __call__(self):
-        np.multiply(self.left, self.right, out=self.output)
+        np.multiply(self.left.output, self.right.output, out=self.output)
 
 
-register(Signal, "__mul__")(Mul)
-register(Signal, "__rmul__")(Mul)
+signal("__mul__")(Mul)
+signal("__rmul__")(Mul)
 
 
-@register(Signal, "__mod__")
+@signal("__mod__")
 class Mod(Operation):
     """Calculate the modulus of a signal.
 
-    >>> two = module.value(2)
-    >>> three = module.value(3)
+    >>> two = Value(2)
+    >>> three = Value(3)
     >>> result = three % two
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 1)
     """
     def __call__(self):
-        np.mod(self.left, self.right, out=self.output)
+        np.mod(self.left.output, self.right.output, out=self.output)
 
 
-@register(Signal, "__lt__", overwrite=True)
+@signal("__lt__")
 class LT(Operation):
     """Calculate the modulus of a signal.
 
-    >>> two = module.value(2)
-    >>> three = module.value(3)
+    >>> two = Value(2)
+    >>> three = Value(3)
     >>> result = three < two
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 0)
     """
 
     def __call__(self):
-        np.less(self.left, self.right, out=self.output)
+        np.less(self.left.output, self.right.output, out=self.output)
 
 
-@register(Signal, "__gt__", overwrite=True)
+@signal("__gt__")
 class GT(Operation):
     """Calculate the modulus of a signal.
 
-    >>> two = module.value(2)
-    >>> three = module.value(3)
+    >>> two = Value(2)
+    >>> three = Value(3)
     >>> result = three > two
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 1)
     """
 
     def __call__(self):
-        np.greater(self.left, self.right, out=self.output)
+        np.greater(self.left.output, self.right.output, out=self.output)
 
 
-@register(Signal, "__abs__")
+@signal("__abs__")
 class Abs(Signal):
     """Subtract a signal from a value.
 
-    >>> one = module.value(-1)
+    >>> one = Value(-1)
     >>> result = abs(one)
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 1.0)
     """
 
-    def __init__(self, signal: Signal):
-        self.signal = signal_value(signal)
+    signal: Signal
 
     def __call__(self):
-        np.abs(self.signal, out=self.output)
+        np.abs(self.signal.output, out=self.output)
 
 
-@register(Signal, "__pow__")
+@signal("__pow__")
 class Pow(Operation):
     """Calculate the modulus of a signal.
 
-    >>> two = module.value(2)
-    >>> three = module.value(3)
+    >>> two = Value(2)
+    >>> three = Value(3)
     >>> result = three ** two
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 3 ** 2)
     """
 
     def __call__(self):
-        np.power(self.left, self.right, out=self.output)
+        np.power(self.left.output, self.right.output, out=self.output)
 
 
-@register(Signal, "__rpow__")
+@signal("__rpow__")
 class RPow(Operation):
     """Calculate the modulus of a signal.
 
-    >>> two = module.value(2)
+    >>> two = Value(2)
     >>> result = 2 ** two
 
-    >>> module.render_frame()
+    >>> result.render_frame()
     >>> assert np.all(result.output == 2 ** 2)
     """
 
     def __call__(self):
-        np.power(self.right, self.left, out=self.output)
+        np.power(self.right.output, self.left.output, out=self.output)

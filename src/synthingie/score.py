@@ -129,11 +129,6 @@ class Repeat(Score):
         return False, total_elapsed
 
 
-class Concurrent(Score):
-    def __init__(self):
-        pass
-
-
 class TimeWarp(Score):
     def __init__(self, score, warp_function, warp_inverse):
         self.score = score

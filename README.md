@@ -18,29 +18,27 @@ Pip install from repo until i do a release.
 
 `$ pip install git+https://github.com/luciotorre/synthingie.git`
 
-If you want widgets to work you need nodejs+npm installed:
+If you want the full interactive experience you need to install some bokeh stuff for jupyter lab:
 
 `$ sudo apt install npm nodejs`
+`$ jupyter labextension install @jupyter-widgets/jupyterlab-manager`
+`$ jupyter labextension install @bokeh/jupyter_bokeh`
 
 ## Example
 
 ```python
-from synthingie import Module, Player
+from synthingie import oscillators, player
 
-SAMPLERATE = 48000
-FRAMESIZE = 1024
 
-mod = Module(SAMPLERATE, FRAMESIZE)
-
-osc = mod.sin(2500, 0.2)
-gate = mod.naive_square(5, amplitude=0.5) + 0.5
+osc = oscillators.Sin(2500, 0.2)
+gate = oscillators.NaiveSquare(5, amplitude=0.5) + 0.5
 
 pedestrian = osc * gate
 
-with Player(mod) as p:
-    p.play(pedestrian)
+player.play(pedestrian)
 
 ```
+
 ## Documentation (ja!)
 
  - [A quick start guide](docs/notebooks/Quickstart.ipynb)
@@ -51,19 +49,46 @@ with Player(mod) as p:
 Exercises from the "Practical Synthetic Sound Design" section of the [book](https://mitpress.mit.edu/books/designing-sound).
 
  - [24 - Pedestrians](docs/Designing_Sound/24%20-%20Pedestrians.ipynb)
+ - [25 - Phone Tones](docs/Designing_Sound/24%20-%20Phone%20Tones.ipynb)
 
 
 ## TODO
+
+### This Release
+ - Notebook examples:
+   * Filters
+   * live
+- move scores to experimental?
+- pypi release
+
+### Future
+ - Read The Docs docs
+ - Videos!
  - Stereo
  - More examples
+   * TR-808
+ - Instruments with voice management
+ - Remote coding
  - Interactivity
- - Visualizers (vumeters, etc)
+   * Fire methods
+ - Visualizers:
+   * VUmeter
+   * spectrogram with history?
  - Graphical representation of patches
- - Multi output nodes?
- - Buses
- - Jack compatibility
  - Filters
+   * Butterworth filters
+   * Band pass
+   * Shelving
+ - Effects
  - Sequencing
- - Everything else
+   * Patterns
+ - Integration
+   * Jack
+   * Midi
+   * OSC
+   * Pygame
+   * Pyglet
+- Work more in scores.
+
 
 
