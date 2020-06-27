@@ -9,4 +9,3 @@ from .score import *  # NOQA
 import synthingie.operations  # NOQA
 import synthingie.filters  # NOQA
 import synthingie.live  # NOQA
-
