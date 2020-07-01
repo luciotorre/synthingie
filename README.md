@@ -48,7 +48,7 @@ st.play(pedestrian)
 Exercises from the "Practical Synthetic Sound Design" section of the [book](https://mitpress.mit.edu/books/designing-sound).
 
  - [24 - Pedestrians](docs/Designing_Sound/24%20-%20Pedestrians.ipynb)
- - [25 - Phone Tones](docs/Designing_Sound/24%20-%20Phone%20Tones.ipynb)
+ - [25 - Phone Tones](docs/Designing_Sound/25%20-%20Phone%20Tones.ipynb)
 
 
 ## TODO
