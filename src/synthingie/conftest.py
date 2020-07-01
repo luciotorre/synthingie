@@ -15,3 +15,6 @@ def add_basics(doctest_namespace):
     doctest_namespace["FRAMESIZE"] = FRAMESIZE
 
     doctest_namespace['Metro'] = Metro
+
+    # testing
+    doctest_namespace['pytest'] = pytest

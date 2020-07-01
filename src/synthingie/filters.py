@@ -2,8 +2,6 @@ from numba.core.decorators import njit
 import numpy as np
 import numba as nb
 
-import pytest  # NOQA
-
 from .core import Signal, signal
 from .oscillators import Sin  # NOQA
 
