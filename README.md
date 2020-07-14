@@ -20,10 +20,12 @@ Pip install from repo until i do a release.
 
 If you want the full interactive experience you need to install some bokeh stuff for jupyter lab:
 
-`$ sudo apt install npm nodejs`
-`$ pip install jupyterlab`
-`$ jupyter labextension install @jupyter-widgets/jupyterlab-manager`
-`$ jupyter labextension install @bokeh/jupyter_bokeh`
+```
+$ sudo apt install npm nodejs
+$ pip install jupyterlab
+$ jupyter labextension install @jupyter-widgets/jupyterlab-manager
+$ jupyter labextension install @bokeh/jupyter_bokeh
+```
 
 ## Example
 
