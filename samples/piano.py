@@ -22,6 +22,7 @@ piano = """
    │  a  │  s  │  d  │  f  │  g  │  h  │  j  │
    └─────┴─────┴─────┴─────┴─────┴─────┴─────┘
 
+(terminals don't have key release events, press any other key to stop sound)
 """
 
 piano_map = {
@@ -47,7 +48,6 @@ def main():
     frequency = st.Value(Note("C").to_hertz())
     wave = st.Sin(frequency)
     envelope = st.ADSR(1, 0.1, 0.1, 0.7, 0.3)
-    envelope.on()
     instrument = wave * envelope
 
     player = st.player.Player()

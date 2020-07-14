@@ -9,7 +9,7 @@ from .oscillator_data import analog_saw, analog_triangle
 from .table import Table, unicast
 
 
-@njit(fastmath=True)
+@njit()
 def _polyblep(phase, phase_increment):
     """
     inspired by:
@@ -35,7 +35,7 @@ def _polyblep(phase, phase_increment):
     float64(int64, float32[:], float64, float64, float32[:]),
     float64(int64, float64, float32[:], float64, float32[:]),
     float64(int64, float32[:], float32[:], float64, float32[:]),
-    ], fastmath=True)
+    ], )
 def _generate_polyblep_saw(framerate, freq, amplitude, start_phase, data_output):
     end_phase = start_phase
 
@@ -60,7 +60,7 @@ def _generate_polyblep_saw(framerate, freq, amplitude, start_phase, data_output)
     float64(int64, float64, float32[:], float32[:], float64, float32[:]),
     float64(int64, float32[:], float32[:], float32[:], float64, float32[:]),
 
-    ], fastmath=True)
+    ], fastmath=False)
 def _generate_polyblep_square(framerate, freq, duty, amplitude, start_phase, data_output):
     end_phase = start_phase
 
@@ -68,14 +68,13 @@ def _generate_polyblep_square(framerate, freq, duty, amplitude, start_phase, dat
         phase_increment = unicast(freq, i) / framerate
         end_phase = start_phase + i * phase_increment
 
-        if end_phase - int(end_phase) >= unicast(duty, i):
-            data_output[i] = unicast(amplitude, i) - (
-                unicast(amplitude, i) * _polyblep(end_phase, phase_increment)
-            )
+        if end_phase - int(end_phase) < unicast(duty, i):
+            naive = unicast(amplitude, i)
         else:
-            data_output[i] = -unicast(amplitude, i) + (
-                unicast(amplitude, i) * _polyblep(end_phase + unicast(duty, i), phase_increment)
-            )
+            naive = -unicast(amplitude, i)
+        data_output[i] = naive \
+            + _polyblep(end_phase, phase_increment) \
+            - _polyblep((end_phase + unicast(duty, i)) % 1, phase_increment)
 
     end_phase = start_phase + data_output.shape[0] * unicast(freq, i) / framerate
     return end_phase
@@ -91,7 +90,7 @@ def _generate_polyblep_square(framerate, freq, duty, amplitude, start_phase, dat
     float64(int64, float64, float32[:], float32[:], float64, float32[:]),
     float64(int64, float32[:], float32[:], float32[:], float64, float32[:]),
 
-    ], fastmath=True)
+    ], )
 def _generate_naive_square(framerate, freq, duty, amplitude, start_phase, data_output):
     end_phase = start_phase
 

@@ -20,7 +20,7 @@ def unicast(source, index):
     float64(float32[:], int64, float32[:], float64, float64, float32[:]),
     float64(float32[:], int64, float64, float32[:], float64, float32[:]),
     float64(float32[:], int64, float32[:], float32[:], float64, float32[:]),
-], fastmath=True)
+], )
 def _generate_table(data, framerate, freq, amplitude, start_phase, data_output):
     samples = data.shape[0]
     end_phase = start_phase

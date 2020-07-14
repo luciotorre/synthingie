@@ -43,6 +43,15 @@ class Audio:
         return np.sqrt(np.sum(self.samples ** 2) / self.samples.shape[0])
 
     def display(self, limit_samples=None):
+        self.display_spectrogram()
+        self.display_signal(limit_samples)
+        # FIXME: audio played is mono! should be stereo if source was stereo
+        samples = librosa.to_mono(self.samples.T)
+        ipd.display(ipd.Audio(samples, rate=self.samplerate))
+
+    _ipython_display_ = display
+
+    def display_spectrogram(self):
         # to make things compatible, transpose into librosa format and make mono
         samples = librosa.to_mono(self.samples.T)
 
@@ -70,13 +79,6 @@ class Audio:
         plt.tight_layout()
         plt.figure(figsize=(12, 4))
 
-        self.display_signal(limit_samples)
-
-        # FIXME: audio played is mono! should be stereo if source was stereo
-        ipd.display(ipd.Audio(samples, rate=self.samplerate))
-
-    _ipython_display_ = display
-
     def display_signal(self, limit_samples=None):
         samples = librosa.to_mono(self.samples.T)
 
@@ -84,6 +86,22 @@ class Audio:
             plt.plot(samples[:limit_samples])
         else:
             plt.plot(samples)
+
+    def display_spectrum(self):
+        nfft = self.samples.shape[0]
+        ticks = librosa.core.fft_frequencies(sr=self.samplerate, n_fft=nfft)
+        ticks = [t for t in ticks if t > 10]
+        ffted = librosa.core.stft(self.samples, n_fft=nfft, center=False)
+        points = np.abs(ffted)[:, 0][-len(ticks):]
+        plt.plot(ticks, points)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.tick_params(
+            axis='y',          # changes apply to the x-axis
+            which='both',      # both major and minor ticks are affected
+            left=False,        # ticks along the left edge are off
+            right=False,       # ticks along the right edge are off
+            labelleft=False)   # labels along the botlefttom edge are off
 
     def save(self, filename):
         assert filename.lower().endswith(".wav")
@@ -230,7 +248,7 @@ class Signal:
     def configure(self, samplerate=DEFAULT_SAMPLERATE, framesize=DEFAULT_FRAMESIZE):
         """Set rendering parameters and create output buffers for patch.
 
-        In most cases convenience methods will call this for you.
+        In most cases convenience methods will call this for you. Don't override.
         """
 
         steps = self.topological_sort()
@@ -453,6 +471,21 @@ class Parameter(Value):
     min: float = 0
     max: float = 1
     step: float = None
+
+    def setup(self):
+        self.watchers = set()
+
+    def on_change(self, callback):
+        """When the value of this parameter is changed, call this callback.
+        """
+        self.watchers.add(callback)
+
+    @control_method
+    def set(self, value):
+        self.value = value
+
+        for callback in self.watchers:
+            callback(value)
 
     def __call__(self):
         self.output.fill(self.value)

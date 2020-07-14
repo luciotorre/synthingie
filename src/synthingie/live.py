@@ -15,12 +15,6 @@ from .core import DEFAULT_FRAMESIZE, DEFAULT_SAMPLERATE, Parameter
 from .delay import CircularBuffer
 
 
-def log(*args):
-    # XXX DELETE THIS DIRT
-    import os
-    os.write(1, (" ".join(str(x) for x in args)).encode("utf8"))
-
-
 class LiveView:
     samplerate = DEFAULT_SAMPLERATE
     framesize = DEFAULT_FRAMESIZE
@@ -177,16 +171,24 @@ class LiveControl:
 class ParameterController(LiveControl):
     def __init__(self, parameter):
         self.parameter = parameter
+        self.parameter.on_change(self.value_changed)
+        self.parameter.view = self
 
     def on_value_change(self, attr, old, new):
         self.parameter.set(new)
+
+    def value_changed(self, value):
+        if value == self.slider.value:
+            return
+
+        self.slider.document.add_next_tick_callback(lambda: setattr(self.slider, "value", value))
 
     def get_layout(self):
         step = self.parameter.step
         if step is None:
             step = (self.parameter.max - self.parameter.min) / 1000
 
-        slider = md.Slider(
+        self.slider = slider = md.Slider(
             start=self.parameter.min, end=self.parameter.max,
             title=self.parameter.name, value=self.parameter.value,
             step=step

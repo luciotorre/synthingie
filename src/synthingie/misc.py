@@ -10,7 +10,7 @@ from .core import Signal, signal, control_method
 from .table import unicast
 
 
-@njit(fastmath=True)
+@njit()
 def _generate_cumsum(signal, value, data_output):
     for i in range(data_output.shape[0]):
         value = value + unicast(signal, i)

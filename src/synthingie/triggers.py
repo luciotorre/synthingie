@@ -3,7 +3,7 @@ from .core import Signal, signal
 from .table import unicast
 
 
-@njit(fastmath=True)
+@njit()
 def _generate_triggers(framerate, duration, start, data_output):
     end = start
 
